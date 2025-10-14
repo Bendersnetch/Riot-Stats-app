@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme static {
+
+}
+
+body {
+    @apply
+    
+    dark:bg-slate-950
+    dark:text-amber-300
+    bg-slate-300
+    text-amber-800;
+}
+
+.main-button {
+    @apply
+
+    p-1
+    rounded-xl
+
+    hover:cursor-pointer
+
+    dark:hover:bg-amber-400
+    hover:bg-slate-400
+
+
+    dark:text-slate-950
+    dark:bg-amber-300
+    text-slate-300
+    bg-amber-800;
+}
+
+.navbar {
+    @apply
+    h-full
+    bg-slate-800
+    rounded-xl;
+    
+}
