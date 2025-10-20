@@ -8,7 +8,7 @@ body {
     @apply
     
     dark:bg-slate-950
-    dark:text-amber-300
+    dark:text-blue-400
     bg-slate-300
     text-amber-800;
 }
@@ -29,6 +29,41 @@ body {
     dark:bg-amber-300
     text-slate-300
     bg-amber-800;
+}
+
+.nav-button {
+    @apply
+
+    p-1
+    rounded-xl
+
+    hover:cursor-pointer
+
+    dark:hover:bg-blue-900
+    hover:bg-slate-400
+
+
+}
+
+.nav-button.active{
+    @apply
+    dark:text-slate-950
+
+    dark:bg-blue-400
+    bg-slate-400;
+}
+
+.card {
+    @apply
+    rounded-xl
+    dark:bg-slate-800
+    p-3
+}
+
+.card .card-head {
+    @apply
+    text-2xl
+    font-bold
 }
 
 .navbar {
