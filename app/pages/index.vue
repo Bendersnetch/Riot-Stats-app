@@ -1,16 +1,25 @@
 <script setup lang="ts">
+import { cloneVNode } from 'vue';
 
-  const {get} = useFoo();
+
+  const {get} = useRequest();
 
   const result = ref();
 
-  
+  // variables for th different charts
+  // player rank chart
+  const rankValues = []
+  const tierCategories = {}
+  let xFormatterRankChart
 
-  onMounted(() => {
-    get('/api/match-ids').then((response) => {
-      result.value = response
-    })
-  });
+  function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
 
 
   const data = [
@@ -33,6 +42,10 @@
   }
 
   const xFormatter = (i: number) => data[i].month
+
+  onMounted(() => {
+
+  })
 </script>
 
 <template>
