@@ -4,75 +4,59 @@
 
 }
 
+/* Base document colors */
 body {
-    @apply
-    
-    dark:bg-slate-950
-    dark:text-blue-400
-    bg-slate-300
-    text-amber-800;
+    @apply bg-gray-100 text-blue-900;
+}
+.dark body {
+    @apply bg-gray-900 text-blue-300;
 }
 
+/* Buttons */
 .main-button {
-    @apply
-
-    p-1
-    rounded-xl
-
-    hover:cursor-pointer
-
-    dark:hover:bg-amber-400
-    hover:bg-slate-400
-
-
-    dark:text-slate-950
-    dark:bg-amber-300
-    text-slate-300
-    bg-amber-800;
+    @apply p-1 rounded-xl text-slate-800 bg-white hover:cursor-pointer;
+}
+.main-button:hover {
+    @apply bg-gray-200;
+}
+.dark .main-button {
+    @apply text-slate-950 bg-amber-300;
+}
+.dark .main-button:hover {
+    @apply bg-amber-400;
 }
 
 .nav-button {
-    @apply
-
-    p-1
-    rounded-xl
-
-    hover:cursor-pointer
-
-    dark:hover:bg-blue-900
-    hover:bg-slate-400
-
-
+    @apply p-1 rounded-xl hover:cursor-pointer;
+}
+.nav-button:hover {
+    @apply bg-gray-200;
+}
+.dark .nav-button:hover {
+    @apply bg-blue-900;
 }
 
 .nav-button.active{
-    @apply
-    dark:text-slate-950
-
-    dark:bg-blue-400
-    bg-slate-400;
+    @apply bg-gray-200;
+}
+.dark .nav-button.active{
+    @apply text-slate-950 bg-blue-400;
 }
 
+/* Cards */
 .card {
-    @apply
-    rounded-xl
-    dark:bg-slate-800
-    p-3
-    w-fit
-    mb-2
-    mr-2
+    @apply rounded-xl p-3 w-fit mb-2 mr-2 bg-white;
+}
+.dark .card {
+    @apply bg-gray-800;
 }
 
 .card .card-head {
-    @apply
-    text-2xl
-    font-bold
+    @apply text-2xl font-bold;
 }
 
+/* Navbar container if used */
 .navbar {
-    @apply
-    h-full
-    bg-slate-800
-    rounded-xl;
-    
+    @apply h-full bg-slate-800 rounded-xl;
 }
+

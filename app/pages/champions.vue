@@ -51,12 +51,20 @@
 
       <!-- Detailed Champions Table -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
           <h2 class="text-xl font-bold">Champion Statistics</h2>
-          <div class="flex gap-2">
+          <div class="flex gap-2 items-center">
+            <label class="text-sm text-gray-600">Sort by</label>
             <select v-model="sortBy" class="rounded border p-2">
               <option value="games">Games Played</option>
               <option value="winrate">Win Rate</option>
+            </select>
+
+            <label class="ml-4 text-sm text-gray-600">Page size</label>
+            <select v-model.number="tableSize" class="rounded border p-2">
+              <option :value="10">10</option>
+              <option :value="20">20</option>
+              <option :value="50">50</option>
             </select>
           </div>
         </div>
@@ -72,7 +80,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="champion in sortedChampions" :key="champion.championId"
+              <tr v-for="champion in paginatedChampions" :key="champion.championId"
                 class="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-2">{{ champion.championId }}</td>
                 <td class="py-2 text-right">{{ champion.games }}</td>
@@ -82,13 +90,30 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Pagination Controls -->
+        <div class="flex items-center justify-center gap-3 mt-4">
+          <button
+            @click="prevTablePage"
+            :disabled="tablePage === 0"
+            class="px-4 py-2 rounded bg-blue-500 text-white disabled:bg-gray-300">
+            Previous
+          </button>
+          <div class="text-sm text-gray-600">Page {{ tablePage + 1 }} / {{ tableTotalPages }}</div>
+          <button
+            @click="nextTablePage"
+            :disabled="tablePage >= tableTotalPages - 1"
+            class="px-4 py-2 rounded bg-blue-500 text-white disabled:bg-gray-300">
+            Next
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useApi } from '~/composables/useApi'
 
 const api = useApi()
@@ -183,6 +208,31 @@ const sortedChampions = computed(() => {
     }
     return b.winrate - a.winrate
   })
+})
+
+// Client-side pagination for champions table
+const tablePage = ref(0)
+const tableSize = ref(10)
+const tableTotalPages = computed(() => {
+  const total = sortedChampions.value.length
+  return total === 0 ? 1 : Math.ceil(total / tableSize.value)
+})
+const paginatedChampions = computed(() => {
+  const start = tablePage.value * tableSize.value
+  const end = start + tableSize.value
+  return sortedChampions.value.slice(start, end)
+})
+
+const prevTablePage = () => {
+  if (tablePage.value > 0) tablePage.value--
+}
+const nextTablePage = () => {
+  if (tablePage.value < tableTotalPages.value - 1) tablePage.value++
+}
+
+// Reset to first page when sort or data changes
+watch([sortBy, championWinrates, tableSize], () => {
+  tablePage.value = 0
 })
 
 onMounted(() => {
