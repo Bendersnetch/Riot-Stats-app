@@ -58,6 +58,9 @@ body {
     rounded-xl
     dark:bg-slate-800
     p-3
+    w-fit
+    mb-2
+    mr-2
 }
 
 .card .card-head {

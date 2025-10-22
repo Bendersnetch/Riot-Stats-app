@@ -1,81 +1,41 @@
-<script setup lang="ts">
-import { cloneVNode } from 'vue';
-
-
-  const {get} = useRequest();
-
-  const result = ref();
-
-  // variables for th different charts
-  // player rank chart
-  const rankValues = []
-  const tierCategories = {}
-  let xFormatterRankChart
-
-  function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
-
-
-  const data = [
-    { month: 'Jan', sales: 100, profit: 50 },
-    { month: 'Feb', sales: 120, profit: 55 },
-    { month: 'Mar', sales: 180, profit: 80 },
-    { month: 'Apr', sales: 110, profit: 40 },
-    { month: 'May', sales: 90, profit: 30 }
-  ]
-
-  const categories = {
-    sales: {
-      name: 'Sales',
-      color: '#3b82f6'
-    },
-    profit: {
-      name: 'Profit',
-      color: '#10b981'
-    }
-  }
-
-  const xFormatter = (i: number) => data[i].month
-
-  onMounted(() => {
-
-  })
-</script>
-
 <template>
-  <div class="card">
-    <div class="card-head">
-      <div class="p-3">
-        <span>This is a chart test</span>
+  <div class="container mx-auto p-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Match Duration Stats Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <h2 class="text-xl font-bold mb-4">Match Duration Statistics</h2>
+        <MatchDuration />
       </div>
-    </div>
-    <div class="card-body">
-      <LineChart
-      :data="data"
-      :categories="categories"
-      :height="300"
-      :xFormatter="xFormatter"
-      xLabel="Month"
-      yLabel="Amount"
-      />
-    </div>
-  </div>
 
-  <div class="card">
-    <div class="card-head">
-      <div class="p-3">
-        <span>This is a chart test</span>
+      <!-- Rank Distribution Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <h2 class="text-xl font-bold mb-4">Rank Distribution</h2>
+        <div class="h-64">
+          <RankDistribution />
+        </div>
       </div>
-    </div>
-    <div class="card-body">
-      <div class="text-3xl">request result</div>
-      <div>{{ result }}</div>
+
+      <!-- Top Champions Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <h2 class="text-xl font-bold mb-4">Most Played Champions</h2>
+        <TopChampions />
+      </div>
+
+      <!-- Champion Winrates -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <h2 class="text-xl font-bold mb-4">Champion Winrates</h2>
+        <ChampionWinrates />
+      </div>
+
+      <!-- Recent Matches -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 col-span-2">
+        <h2 class="text-xl font-bold mb-4">Recent Matches</h2>
+        <RecentMatches />
+      </div>
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+// Components will be implemented next
+</script>
