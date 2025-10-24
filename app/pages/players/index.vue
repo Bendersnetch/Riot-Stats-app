@@ -88,28 +88,52 @@ import type { Player, Tier } from '~/types/api'
 const api = useApi()
 const loading = ref(true)
 const error = ref<string | null>(null)
-const players = ref<Player[]>([])
+// allPlayers holds the complete list fetched from the backend; playersDisplayed is the current page
+const allPlayers = ref<Player[]>([])
 const page = ref(0)
 const size = ref(20)
-const totalPages = ref(0)
 const sortBy = ref<'leaguePoints' | 'wins'>('leaguePoints')
 const selectedTier = ref('')
 const tiers = ref<Tier[]>([])
 
-const displayTotalPages = computed(() => Math.max(totalPages.value, 1))
+// Derived lists and paging
+const filteredSortedPlayers = computed(() => {
+  const arr = allPlayers.value.slice()
+  // filter by tier if selected
+  const filtered = selectedTier.value ? arr.filter(p => p.tier === selectedTier.value) : arr
+  // sort descending by chosen metric
+  const key = sortBy.value
+  filtered.sort((a: Player, b: Player) => {
+    const av = Number((a as any)[key] ?? 0)
+    const bv = Number((b as any)[key] ?? 0)
+    return bv - av
+  })
+  return filtered
+})
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredSortedPlayers.value.length / size.value)))
+const displayTotalPages = computed(() => totalPages.value)
+
+const players = computed(() => {
+  const start = page.value * size.value
+  return filteredSortedPlayers.value.slice(start, start + size.value)
+})
 
 const fetchPlayers = async () => {
   loading.value = true
   try {
-    const { content, totalPages: total } = await api.players.list({
-      tier: selectedTier.value || undefined,
-      page: page.value,
-      size: size.value,
-      sort: `${sortBy.value},desc`
-    })
-    players.value = content
-    totalPages.value = total
+    // Fetch full list from backend; client will handle sorting/pagination
+    const resp = await api.players.list()
+    const pageResp = (() => {
+      if (!resp) return { content: [] as Player[] }
+      if (Array.isArray(resp)) return { content: resp as Player[] }
+      return { content: resp.content ?? [] }
+    })()
+    allPlayers.value = pageResp.content
+    // ensure current page is within bounds
+    if (page.value > totalPages.value - 1) page.value = 0
   } catch (e) {
+    console.error('Failed to load players', e)
     error.value = 'Failed to load players'
   } finally {
     loading.value = false
@@ -129,19 +153,20 @@ const formatPuuid = (puuid: string) => {
   return puuid.slice(0, 8) + '...'
 }
 
-const prevPage = () => {
-  if (page.value > 0) page.value--
-}
-const nextPage = () => {
-  if (page.value < totalPages.value - 1) page.value++
-}
+const prevPage = () => { if (page.value > 0) page.value-- }
+const nextPage = () => { if (page.value < totalPages.value - 1) page.value++ }
 
-watch([sortBy, selectedTier, page, size], (newVals, oldVals) => {
-  // If sort, tier or size changed (indices 0,1,3), reset to first page
-  if (newVals[0] !== oldVals?.[0] || newVals[1] !== oldVals?.[1] || newVals[3] !== oldVals?.[3]) {
+// When sort, tier or page size change we reset to first page (client-side)
+watch([sortBy, selectedTier, size], (newVals, oldVals) => {
+  if (newVals[0] !== oldVals?.[0] || newVals[1] !== oldVals?.[1] || newVals[2] !== oldVals?.[2]) {
     page.value = 0
   }
-  fetchPlayers()
+})
+
+// If page changes ensure it's within bounds
+watch(page, (p) => {
+  if (p < 0) page.value = 0
+  if (p > totalPages.value - 1) page.value = totalPages.value - 1
 })
 
 onMounted(() => {

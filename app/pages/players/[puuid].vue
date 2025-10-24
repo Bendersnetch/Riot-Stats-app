@@ -33,6 +33,67 @@
         </div>
       </div>
 
+      <!-- Aggregated Player Stats -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold mb-4">Player Season Stats</h2>
+        <div v-if="loadingStats" class="flex justify-center py-6">
+          <Loading />
+        </div>
+        <div v-else-if="!playerStats" class="text-sm text-gray-600 dark:text-gray-400">
+          No stats available.
+        </div>
+        <div v-else class="space-y-6">
+          <div class="grid md:grid-cols-3 gap-4">
+            <div>
+              <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Games</div>
+              <div class="text-2xl font-semibold">{{ totalGames }}</div>
+            </div>
+            <div>
+              <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Wins / Losses</div>
+              <div class="text-lg font-medium">{{ overviewWins }} / {{ overviewLosses }}</div>
+            </div>
+            <div>
+              <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Win Rate</div>
+              <div class="text-lg font-medium">{{ overviewWinrate }}%</div>
+            </div>
+          </div>
+
+          <div v-if="averagesDisplay" class="grid md:grid-cols-3 gap-4">
+            <div v-for="metric in averagesDisplay" :key="metric.label">
+              <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ metric.label }}</div>
+              <div class="text-lg font-medium">{{ metric.value }}</div>
+            </div>
+          </div>
+
+          <div v-if="topChampions.length" class="space-y-3">
+            <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">Top Champions</div>
+            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+              <li v-for="champ in topChampions" :key="champ.championId + ':' + (champ.championName || '')" class="py-2 flex justify-between items-center">
+                <span class="truncate">{{ champ.championName || ('Champion ' + champ.championId) }}</span>
+                <span class="text-sm text-gray-600 dark:text-gray-400">{{ formatWinrate(champ.winrate, champ.wins, champ.games ?? champ.count) }} • {{ champ.games ?? champ.count ?? 0 }} games</span>
+              </li>
+            </ul>
+          </div>
+
+          <div v-if="additionalSections.length" class="grid md:grid-cols-2 gap-6">
+            <div v-for="section in additionalSections" :key="section.title" class="space-y-3">
+              <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ section.title }}</div>
+              <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                <li v-for="entry in section.entries" :key="section.title + ':' + entry.label" class="py-2 flex justify-between items-center">
+                  <span class="truncate">{{ entry.label }}</span>
+                  <span class="text-sm text-gray-600 dark:text-gray-400">{{ entry.detail }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <details class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300">
+            <summary class="cursor-pointer font-medium text-gray-700 dark:text-gray-200">Raw stats payload</summary>
+            <pre class="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs">{{ prettyPlayerStats }}</pre>
+          </details>
+        </div>
+      </div>
+
       <!-- Match History -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 class="text-xl font-bold mb-4">Recent Matches</h2>
@@ -108,11 +169,13 @@ const puuid = route.params.puuid as string
 
 const loading = ref(true)
 const loadingMatches = ref(true)
+const loadingStats = ref(true)
 const error = ref<string | null>(null)
 const player = ref<Player | null>(null)
 const matches = ref<MatchData[]>([])
 const matchesPage = ref(0)
 const hasMoreMatches = ref(true)
+const playerStats = ref<Record<string, any> | null>(null)
 
 const winRate = computed(() => {
   if (!player.value) return '0.0'
@@ -149,6 +212,7 @@ const fetchPlayer = async () => {
     player.value = getMockPlayer(puuid)
     loading.value = false
     error.value = null
+    buildMockStats()
     return
   }
   try {
@@ -162,9 +226,47 @@ const fetchPlayer = async () => {
     } else {
       console.error(e)
       error.value = 'Failed to load player details'
+      buildMockStats()
     }
   } finally {
     loading.value = false
+  }
+}
+
+const buildMockStats = () => {
+  const p = player.value ?? getMockPlayer(puuid)
+  const wins = Number(p?.wins || 0)
+  const losses = Number(p?.losses || 0)
+  const games = wins + losses
+  playerStats.value = {
+    wins,
+    losses,
+    totalGames: games,
+    winrate: games ? (wins / games) * 100 : 0,
+  }
+  loadingStats.value = false
+}
+
+const fetchPlayerStats = async () => {
+  if (isMock.value) {
+    buildMockStats()
+    return
+  }
+  loadingStats.value = true
+  try {
+    const stats = await api.players.stats.details(puuid)
+    playerStats.value = stats ?? null
+  } catch (e) {
+    const status = (e as any)?.response?.status
+    if (status === 404) {
+      console.warn('Player stats not available (404) for', puuid)
+      playerStats.value = null
+    } else {
+      console.error('Failed to load player stats', e)
+      playerStats.value = null
+    }
+  } finally {
+    loadingStats.value = false
   }
 }
 
@@ -227,7 +329,12 @@ const fetchMatches = async () => {
       hasMoreMatches.value = content.length === 10
     }
   } catch (e) {
-    console.error('Failed to load matches', e)
+    const status = (e as any)?.response?.status
+    if (status === 404) {
+      console.warn('No matches available (404) for', puuid)
+    } else {
+      console.error('Failed to load matches', e)
+    }
     matches.value = []
     playerStatsByMatch.value = {}
     if (matchesPage.value > 0) hasMoreMatches.value = false
@@ -247,7 +354,7 @@ const formatDuration = (seconds: number) => {
 const prevPage = () => { if (matchesPage.value > 0) matchesPage.value-- }
 const nextPage = () => { if (hasMoreMatches.value) matchesPage.value++ }
 
-onMounted(() => { fetchPlayer(); fetchMatches() })
+onMounted(() => { fetchPlayer(); fetchMatches(); fetchPlayerStats() })
 watch(matchesPage, fetchMatches)
 watch(() => route.params.puuid, () => {
   // When navigating to another player, reset and refetch
@@ -256,6 +363,8 @@ watch(() => route.params.puuid, () => {
   playerStatsByMatch.value = {}
   loading.value = true
   loadingMatches.value = true
+  loadingStats.value = true
+  playerStats.value = null
   error.value = null
   // @ts-ignore-next-line
   const nextPuuid = route.params.puuid as string
@@ -263,6 +372,130 @@ watch(() => route.params.puuid, () => {
     // update local puuid in closure is not necessary for API calls using route param directly
     fetchPlayer()
     fetchMatches()
+    fetchPlayerStats()
   }
 })
+
+const formatWinrate = (value?: number, wins?: number, total?: number) => {
+  if (value != null) return `${Number(value).toFixed(1)}%`
+  if (wins != null && total) return `${((wins / total) * 100).toFixed(1)}%`
+  return '0.0%'
+}
+
+const totalGames = computed(() => {
+  if (!playerStats.value) return 0
+  const stats: any = playerStats.value
+  return Number(stats.totalGames ?? stats.games ?? stats.count ?? 0)
+})
+const overviewWins = computed(() => {
+  if (!playerStats.value) return player.value?.wins ?? 0
+  const stats: any = playerStats.value
+  return Number(stats.wins ?? stats.totalWins ?? 0)
+})
+const overviewLosses = computed(() => {
+  if (!playerStats.value) return player.value?.losses ?? 0
+  const stats: any = playerStats.value
+  const explicit = stats.losses ?? stats.totalLosses
+  if (explicit != null) return Number(explicit)
+  const total = totalGames.value
+  const wins = overviewWins.value
+  if (total) return Math.max(total - wins, 0)
+  return player.value?.losses ?? 0
+})
+const overviewWinrate = computed(() => {
+  if (!playerStats.value) return winRate.value
+  const stats: any = playerStats.value
+  if (stats.winrate != null) return Number(stats.winrate).toFixed(1)
+  const wins = overviewWins.value
+  const losses = overviewLosses.value
+  const total = wins + losses
+  return total ? ((wins / total) * 100).toFixed(1) : '0.0'
+})
+
+const topChampions = computed(() => {
+  if (!playerStats.value) return [] as any[]
+  const stats: any = playerStats.value
+  const list = stats.topChampions ?? stats.mostPlayedChampions ?? stats.champions ?? []
+  return Array.isArray(list) ? list.slice(0, 5) : []
+})
+
+const averagesDisplay = computed(() => {
+  if (!playerStats.value) return null
+  const stats: any = playerStats.value
+  const rows: { label: string; value: string }[] = []
+  if (stats.avgKills ?? stats.averageKills) rows.push({ label: 'Avg Kills', value: Number(stats.avgKills ?? stats.averageKills).toFixed(1) })
+  if (stats.avgDeaths ?? stats.averageDeaths) rows.push({ label: 'Avg Deaths', value: Number(stats.avgDeaths ?? stats.averageDeaths).toFixed(1) })
+  if (stats.avgAssists ?? stats.averageAssists) rows.push({ label: 'Avg Assists', value: Number(stats.avgAssists ?? stats.averageAssists).toFixed(1) })
+  if (stats.kda) rows.push({ label: 'KDA', value: Number(stats.kda).toFixed(2) })
+  if (stats.csPerMinute ?? stats.csPerMin ?? stats.cspm) rows.push({ label: 'CS / Min', value: Number(stats.csPerMinute ?? stats.csPerMin ?? stats.cspm).toFixed(2) })
+  if (stats.damagePerMinute ?? stats.dpm ?? stats.avgDamagePerMinute) rows.push({ label: 'Damage / Min', value: Math.round(Number(stats.damagePerMinute ?? stats.dpm ?? stats.avgDamagePerMinute)).toString() })
+  if (stats.goldPerMinute ?? stats.gpm ?? stats.avgGoldPerMinute) rows.push({ label: 'Gold / Min', value: Math.round(Number(stats.goldPerMinute ?? stats.gpm ?? stats.avgGoldPerMinute)).toString() })
+  if (!rows.length) return null
+  return rows
+})
+
+const additionalSections = computed(() => {
+  if (!playerStats.value) return [] as { title: string; entries: { label: string; detail: string }[] }[]
+  const stats: any = playerStats.value
+  const sections: { title: string; entries: { label: string; detail: string }[] }[] = []
+
+  const topRoles = stats.topRoles ?? stats.roles ?? []
+  if (Array.isArray(topRoles) && topRoles.length) {
+    sections.push({
+      title: 'Top Roles',
+      entries: topRoles.slice(0, 5).map((r: any) => ({
+        label: r.role || r.position || r.name,
+        detail: `${formatWinrate(r.winrate, r.wins, r.games ?? r.count)} • ${r.games ?? r.count ?? 0} games`
+      }))
+    })
+  }
+
+  const topQueues = stats.topQueues ?? stats.queues ?? []
+  if (Array.isArray(topQueues) && topQueues.length) {
+    sections.push({
+      title: 'Top Queues',
+      entries: topQueues.slice(0, 5).map((q: any) => ({
+        label: q.name || q.queue || q.queueId,
+        detail: `${formatWinrate(q.winrate, q.wins, q.games ?? q.count)} • ${q.games ?? q.count ?? 0} games`
+      }))
+    })
+  }
+
+  const topItems = stats.topItems ?? stats.items ?? []
+  if (Array.isArray(topItems) && topItems.length) {
+    sections.push({
+      title: 'Core Items',
+      entries: topItems.slice(0, 6).map((i: any) => ({
+        label: i.itemName || i.name || `Item ${i.itemId ?? i.id}`,
+        detail: `${formatWinrate(i.winrate, i.wins, i.games ?? i.count)} • ${i.games ?? i.count ?? 0} games`
+      }))
+    })
+  }
+
+  const allies = stats.commonAllies ?? stats.duo ?? stats.teammates ?? []
+  if (Array.isArray(allies) && allies.length) {
+    sections.push({
+      title: 'Common Allies',
+      entries: allies.slice(0, 6).map((a: any) => ({
+        label: a.name || a.summonerName || (a.puuid ? `${a.puuid.slice(0, 8)}…` : 'Unknown'),
+        detail: `${formatWinrate(a.winrate, a.wins, a.games ?? a.count)} • ${a.games ?? a.count ?? 0} games`
+      }))
+    })
+  }
+
+  const opponents = stats.commonOpponents ?? stats.opponents ?? []
+  if (Array.isArray(opponents) && opponents.length) {
+    sections.push({
+      title: 'Common Opponents',
+      entries: opponents.slice(0, 6).map((o: any) => ({
+        label: o.name || o.summonerName || (o.puuid ? `${o.puuid.slice(0, 8)}…` : 'Unknown'),
+        detail: `${formatWinrate(o.winrate, o.wins, o.games ?? o.count)} • ${o.games ?? o.count ?? 0} games`
+      }))
+    })
+  }
+
+  return sections
+})
+
+const prettyPlayerStats = computed(() => JSON.stringify(playerStats.value, null, 2))
 </script>

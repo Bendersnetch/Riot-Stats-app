@@ -19,18 +19,9 @@ export const useApi = () => {
 
   // Players API
   const players = {
-    list: (params?: {
-      tier?: string;
-      rank?: string;
-      minLp?: number;
-      maxLp?: number;
-      veteran?: boolean;
-      inactive?: boolean;
-      freshBlood?: boolean;
-      page?: number;
-      size?: number;
-      sort?: string;
-    }) => request.get('/players', { params }),
+    // Deprecated: server-side pagination/sort/filtering is removed.
+    // Fetch the full players list and let the client perform sorting/pagination.
+    list: () => request.get('/players'),
     getByPuuid: (puuid: string) => request.get(`/players/${puuid}`),
     stats: {
       count: (params?: { tier?: string; rank?: string; minLp?: number; maxLp?: number }) =>
@@ -39,6 +30,7 @@ export const useApi = () => {
         request.get('/players/stats/leaderboard', { params }),
       winrate: (puuid: string) => request.get(`/players/stats/winrate/${puuid}`),
       distribution: () => request.get('/players/stats/distribution'),
+      details: (puuid: string) => request.get(`matches/stats/players/${puuid}`),
     },
     getMatches: (puuid: string, params?: { page?: number; size?: number }) =>
       request.get(`/players/${puuid}/matches`, { params }),
