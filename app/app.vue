@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <ColorScheme tag="div">
     <NuxtLayout>
-        <NuxtPage/>
+      <NuxtPage />
     </NuxtLayout>
-  </div>
+  </ColorScheme>
 </template>

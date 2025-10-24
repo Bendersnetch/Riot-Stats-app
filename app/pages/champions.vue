@@ -3,29 +3,31 @@
     <div class="grid gap-6">
       <!-- Statistics Overview -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col h-[400px]">
           <h2 class="text-xl font-bold mb-4">Top Picked Champions</h2>
-          <div class="h-[300px]">
+          <div class="flex-1">
             <div v-if="loadingPicks" class="flex items-center justify-center h-full">
               <Loading />
             </div>
             <div v-else>
-              <PieChart
-                :data="pickRateChartData"
-                :options="chartOptions"
-              />
+              <div class="h-[320px]">
+                <BasePieChart
+                  :data="pickRateChartData"
+                  :options="chartOptions"
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col h-[400px]">
           <h2 class="text-xl font-bold mb-4">Top Winrate Champions</h2>
-          <div class="h-[300px]">
+          <div class="flex-1">
             <div v-if="loadingWinrates" class="flex items-center justify-center h-full">
               <Loading />
             </div>
-            <div v-else>
-              <BarChart
+            <div v-else class="h-full">
+              <BaseBarChart
                 :data="winrateChartData"
                 :options="chartOptions"
               />
@@ -33,14 +35,14 @@
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col h-[400px]">
           <h2 class="text-xl font-bold mb-4">Team-Based Stats</h2>
-          <div class="h-[300px]">
+          <div class="flex-1">
             <div v-if="loadingTeamStats" class="flex items-center justify-center h-full">
               <Loading />
             </div>
-            <div v-else>
-              <BarChart
+            <div v-else class="h-full">
+              <BaseBarChart
                 :data="teamStatsChartData"
                 :options="chartOptions"
               />
@@ -55,13 +57,13 @@
           <h2 class="text-xl font-bold">Champion Statistics</h2>
           <div class="flex gap-2 items-center">
             <label class="text-sm text-gray-600">Sort by</label>
-            <select v-model="sortBy" class="rounded border p-2">
+            <select v-model="sortBy" class="rounded border p-2 bg-gray-900">
               <option value="games">Games Played</option>
               <option value="winrate">Win Rate</option>
             </select>
 
             <label class="ml-4 text-sm text-gray-600">Page size</label>
-            <select v-model.number="tableSize" class="rounded border p-2">
+            <select v-model.number="tableSize" class="rounded border p-2 bg-gray-900">
               <option :value="10">10</option>
               <option :value="20">20</option>
               <option :value="50">50</option>
@@ -82,7 +84,18 @@
             <tbody>
               <tr v-for="champion in paginatedChampions" :key="champion.championId"
                 class="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
-                <td class="py-2">{{ champion.championId }}</td>
+                <td class="py-2">
+                  <div class="flex items-center gap-2">
+                    <img
+                      v-if="champion.championName"
+                      :src="`/tiles/${champion.championName}_0.jpg`"
+                      :alt="champion.championName"
+                      class="w-6 h-6 rounded object-cover"
+                      @error="($event.target as HTMLImageElement).style.display='none'"
+                    />
+                    <span>{{ champion.championName || `Champion ${champion.championId}` }}</span>
+                  </div>
+                </td>
                 <td class="py-2 text-right">{{ champion.games }}</td>
                 <td class="py-2 text-right">{{ champion.wins }}</td>
                 <td class="py-2 text-right">{{ (champion.winrate).toFixed(1) }}%</td>
@@ -115,6 +128,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useApi } from '~/composables/useApi'
+import BasePieChart from '~/components/BasePieChart.vue'
+import BaseBarChart from '~/components/BaseBarChart.vue'
+
+// Local type for winrate items from API including championName
+type ChampionWinrateItem = { championId: number; championName?: string; games: number; wins: number; winrate: number }
 
 const api = useApi()
 const loadingPicks = ref(true)
@@ -122,9 +140,19 @@ const loadingWinrates = ref(true)
 const loadingTeamStats = ref(true)
 const sortBy = ref<'games' | 'winrate'>('games')
 
-const championPicks = ref<{ championId: number; count: number }[]>([])
-const championWinrates = ref<{ championId: number; games: number; wins: number; winrate: number }[]>([])
-const teamStats = ref<{ championId: number; count: number }[]>([])
+// Include optional championName for charts
+const championPicks = ref<{ championId: number; championName?: string; count: number }[]>([])
+const championWinrates = ref<ChampionWinrateItem[]>([])
+const teamStats = ref<{ championId: number; championName?: string; count: number }[]>([])
+
+// Build a map championId -> championName from winrate endpoint (which includes names)
+const idToChampionName = computed(() => {
+  const map = new Map<number, string>()
+  for (const c of championWinrates.value) {
+    if (c.championName) map.set(c.championId, c.championName)
+  }
+  return map
+})
 
 // Fetch data functions
 const fetchPickRates = async () => {
@@ -159,7 +187,7 @@ const fetchTeamStats = async () => {
 
 // Chart data computeds
 const pickRateChartData = computed(() => ({
-  labels: championPicks.value.map(c => `Champion ${c.championId}`),
+  labels: championPicks.value.map(c => idToChampionName.value.get(c.championId) || c.championName || `Champion ${c.championId}`),
   datasets: [{
     label: 'Pick Rate',
     data: championPicks.value.map(c => c.count),
@@ -174,7 +202,7 @@ const pickRateChartData = computed(() => ({
 }))
 
 const winrateChartData = computed(() => ({
-  labels: championWinrates.value.slice(0, 10).map(c => `Champion ${c.championId}`),
+  labels: championWinrates.value.slice(0, 10).map(c => c.championName || `Champion ${c.championId}`),
   datasets: [{
     label: 'Win Rate %',
     data: championWinrates.value.slice(0, 10).map(c => c.winrate),
@@ -183,7 +211,7 @@ const winrateChartData = computed(() => ({
 }))
 
 const teamStatsChartData = computed(() => ({
-  labels: teamStats.value.map(c => `Champion ${c.championId}`),
+  labels: teamStats.value.map(c => idToChampionName.value.get(c.championId) || c.championName || `Champion ${c.championId}`),
   datasets: [{
     label: 'Team Pick Rate',
     data: teamStats.value.map(c => c.count),

@@ -5,7 +5,7 @@ export interface MatchId {
   rank: Rank;
 }
 
-export type Tier = 'IRON' | 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'EMERALD' | 'DIAMOND' | 'MASTER' | 'GRANDMASTER' | 'CHALLENGER';
+export type Tier = 'PLATINUM' | 'EMERALD' | 'DIAMOND' | 'MASTER' | 'CHALLENGER';
 export type Rank = 'I' | 'II' | 'III' | 'IV';
 
 export interface Player {

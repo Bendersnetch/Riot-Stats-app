@@ -1,6 +1,6 @@
 <template>
   <div class="relative h-full w-full">
-    <canvas ref="chartRef"></canvas>
+    <canvas ref="chartRef" class="h-full w-full"></canvas>
   </div>
 </template>
 

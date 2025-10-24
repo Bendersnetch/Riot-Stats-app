@@ -19,6 +19,13 @@
           <div class="flex flex-wrap gap-2">
             <div v-for="participant in match.info.participants" :key="participant.puuid"
               class="flex items-center gap-2 bg-white dark:bg-gray-800 rounded p-2">
+              <img
+                v-if="participant.championName"
+                :src="`/tiles/${participant.championName}_0.jpg`"
+                :alt="participant.championName"
+                class="w-5 h-5 rounded object-cover"
+                @error="($event.target as HTMLImageElement).style.display='none'"
+              />
               <span class="text-sm">{{ participant.championName }}</span>
               <span class="text-xs text-gray-600 dark:text-gray-400">
                 {{ participant.kills }}/{{ participant.deaths }}/{{ participant.assists }}
@@ -60,8 +67,11 @@ const formatDate = (timestamp: number) => {
   return new Date(timestamp).toLocaleDateString()
 }
 
-const formatGameMode = (mode: string) => {
-  return mode.charAt(0) + mode.slice(1).toLowerCase()
+// Be defensive: handle unexpected values safely and satisfy TS
+const formatGameMode = (mode: unknown) => {
+  if (typeof mode !== 'string' || !mode) return 'Unknown'
+  const first = mode.charAt(0).toUpperCase()
+  return first + mode.slice(1).toLowerCase()
 }
 
 onMounted(fetchData)

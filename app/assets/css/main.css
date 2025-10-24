@@ -45,14 +45,34 @@ body {
 
 /* Cards */
 .card {
-    @apply rounded-xl p-3 w-fit mb-2 mr-2 bg-white;
+    @apply rounded-xl p-3 w-fit mb-2 mr-2 bg-white dark:bg-gray-800;
 }
 .dark .card {
     @apply bg-gray-800;
 }
 
+/* Dashboard cards used on the index page */
+.dashboard-card {
+    @apply bg-white rounded-lg shadow-lg p-6 transition-colors;
+}
+.dark .dashboard-card {
+    @apply !bg-gray-800;
+}
+
 .card .card-head {
     @apply text-2xl font-bold;
+}
+
+/* Card title/subtitle helpers for consistent contrast */
+.card-title {
+    @apply !text-gray-900 dark:!text-gray-100;
+}
+.card-subtitle {
+    @apply !text-gray-900 dark:!text-gray-300;
+}
+/* Fallback: ensure any h2 inside a dashboard card has strong contrast */
+.dashboard-card h2 {
+    @apply !text-gray-900 dark:!text-gray-100;
 }
 
 /* Navbar container if used */
@@ -60,3 +80,23 @@ body {
     @apply h-full bg-slate-800 rounded-xl;
 }
 
+/* Navbar themed styles */
+.nav-aside {
+    @apply bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700;
+}
+.nav-header, .nav-footer {
+    @apply border-gray-200 dark:border-gray-800;
+}
+.nav-link {
+    @apply text-gray-700 dark:text-gray-300;
+}
+.nav-link:hover {
+    @apply bg-gray-200/60 dark:bg-gray-800/60;
+}
+/* Active route link */
+.router-link-active.nav-link, .router-link-exact-active.nav-link {
+    @apply bg-blue-600 text-white;
+}
+.toggle-btn {
+    @apply bg-white/70 dark:bg-gray-800/70 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800;
+}

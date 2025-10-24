@@ -25,6 +25,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'Riot Stats',
+      htmlAttrs: { class: 'dark' },
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -34,13 +35,13 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8080/api'
+      apiBaseUrl: 'http://localhost:8080/api'
     }
   },
 
   colorMode: {
     classSuffix: '',
-    preference: 'system',
-    fallback: 'light'
+    preference: 'dark',
+    fallback: 'dark'
   }
 })
