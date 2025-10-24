@@ -157,10 +157,6 @@ const refreshRecentMatches = async () => {
   try {
     const page: any = (await api.matchData.list({ page: 0, size: 5, sort: 'info.gameEndTimestamp,desc' })) ?? {}
     recentMatches.value = Array.isArray(page?.content) ? page.content : []
-    const total = typeof page?.totalElements === 'number' ? page.totalElements : undefined
-    if (typeof total === 'number' && summaryStats.value[0]) {
-      summaryStats.value[0].value = total.toLocaleString()
-    }
   } catch {
     recentMatches.value = []
   } finally {
@@ -176,6 +172,33 @@ const loadPlayerCount = async () => {
   } catch {}
 }
 
+const loadMatchCount = async () => {
+  try {
+    const res: any = await api.matchIds.stats.count()
+    const countCandidates = [
+      typeof res === 'number' ? res : undefined,
+      res?.count,
+      res?.total,
+      res?.totalMatches,
+      res?.data,
+      res?.data?.count,
+    ]
+    const count = countCandidates
+      .map((value) => {
+        if (typeof value === 'number') return value
+        if (typeof value === 'string') {
+          const parsed = Number(value)
+          return Number.isFinite(parsed) ? parsed : undefined
+        }
+        return undefined
+      })
+      .find((value): value is number => typeof value === 'number')
+    if (typeof count === 'number' && summaryStats.value[0]) {
+      summaryStats.value[0].value = count.toLocaleString()
+    }
+  } catch {}
+}
+
 onMounted(async () => {
   checkApiHealth()
   await Promise.all([
@@ -183,7 +206,8 @@ onMounted(async () => {
     refreshChampions(),
     refreshWinrates(),
     refreshRecentMatches(),
-    loadPlayerCount()
+    loadPlayerCount(),
+    loadMatchCount()
   ])
 })
 </script>
