@@ -30,10 +30,16 @@ export const useApi = () => {
         request.get('/players/stats/leaderboard', { params }),
       winrate: (puuid: string) => request.get(`/players/stats/winrate/${puuid}`),
       distribution: () => request.get('/players/stats/distribution'),
-      details: (puuid: string) => request.get(`matches/stats/players/${puuid}`),
+      details: (puuid: string) => request.get(`/matches/stats/players/${puuid}`),
     },
     getMatches: (puuid: string, params?: { page?: number; size?: number }) =>
       request.get(`/players/${puuid}/matches`, { params }),
+  }
+
+  const champions = {
+    stats: {
+      details: (champion: string) => request.get(`/matches/stats/champions/${encodeURIComponent(champion)}`),
+    },
   }
 
   // Match Data API
@@ -50,28 +56,29 @@ export const useApi = () => {
       page?: number;
       size?: number;
       sort?: string;
-    }) => request.get('/match-data', { params }),
-    getById: (matchId: string) => request.get(`/match-data/${matchId}`),
-    getPlayers: (matchId: string) => request.get(`/match-data/${matchId}/players`),
+    }) => request.get('/matches', { params }),
+    getById: (matchId: string) => request.get(`/matches/${matchId}`),
+    getPlayers: (matchId: string) => request.get(`/matches/${matchId}/players`),
     getByPuuid: (puuid: string, params?: { page?: number; size?: number }) =>
-      request.get(`/match-data/participants/by-puuid/${puuid}`, { params }),
+      request.get(`/matches/participants/${puuid}`, { params }),
     stats: {
       durations: (params?: {
         queueId?: number;
         platformId?: string;
         startTimeFrom?: number;
         startTimeTo?: number;
-      }) => request.get('/match-data/stats/durations', { params }),
+      }) => request.get('/matches/stats/durations', { params }),
       champions: (params?: { byTeam?: boolean; limit?: number }) =>
-        request.get('/match-data/stats/champions', { params }),
+        request.get('/matches/stats/champions', { params }),
       winrateByChampion: (params?: { queueId?: number; platformId?: string }) =>
-        request.get('/match-data/stats/winrate-by-champion', { params }),
+        request.get('/matches/stats/winrate-by-champion', { params }),
     },
   }
 
   return {
     matchIds,
     players,
+    champions,
     matchData,
   }
 }

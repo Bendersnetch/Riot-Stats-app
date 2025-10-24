@@ -36,7 +36,7 @@
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col h-[400px]">
-          <h2 class="text-xl font-bold mb-4">Team-Based Stats</h2>
+          <h2 class="text-xl font-bold mb-4">Most picked Champions</h2>
           <div class="flex-1">
             <div v-if="loadingTeamStats" class="flex items-center justify-center h-full">
               <Loading />
@@ -85,7 +85,7 @@
               <tr v-for="champion in paginatedChampions" :key="champion.championId"
                 class="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-2">
-                  <div class="flex items-center gap-2">
+                  <NuxtLink :to="championLink(champion)" class="flex items-center gap-2 hover:text-blue-500">
                     <img
                       v-if="champion.championName"
                       :src="`/tiles/${champion.championName}_0.jpg`"
@@ -94,7 +94,7 @@
                       @error="($event.target as HTMLImageElement).style.display='none'"
                     />
                     <span>{{ champion.championName || `Champion ${champion.championId}` }}</span>
-                  </div>
+                  </NuxtLink>
                 </td>
                 <td class="py-2 text-right">{{ champion.games }}</td>
                 <td class="py-2 text-right">{{ champion.wins }}</td>
@@ -256,6 +256,11 @@ const prevTablePage = () => {
 }
 const nextTablePage = () => {
   if (tablePage.value < tableTotalPages.value - 1) tablePage.value++
+}
+
+const championLink = (champion: { championId: number; championName?: string }) => {
+  const name = champion.championName || `Champion-${champion.championId}`
+  return `/champions/${encodeURIComponent(name)}`
 }
 
 // Reset to first page when sort or data changes

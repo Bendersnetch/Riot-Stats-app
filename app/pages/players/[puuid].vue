@@ -65,32 +65,64 @@
             </div>
           </div>
 
-          <div v-if="topChampions.length" class="space-y-3">
-            <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">Top Champions</div>
-            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-              <li v-for="champ in topChampions" :key="champ.championId + ':' + (champ.championName || '')" class="py-2 flex justify-between items-center">
-                <span class="truncate">{{ champ.championName || ('Champion ' + champ.championId) }}</span>
-                <span class="text-sm text-gray-600 dark:text-gray-400">{{ formatWinrate(champ.winrate, champ.wins, champ.games ?? champ.count) }} • {{ champ.games ?? champ.count ?? 0 }} games</span>
-              </li>
-            </ul>
-          </div>
-
-          <div v-if="additionalSections.length" class="grid md:grid-cols-2 gap-6">
-            <div v-for="section in additionalSections" :key="section.title" class="space-y-3">
-              <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ section.title }}</div>
-              <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-                <li v-for="entry in section.entries" :key="section.title + ':' + entry.label" class="py-2 flex justify-between items-center">
-                  <span class="truncate">{{ entry.label }}</span>
-                  <span class="text-sm text-gray-600 dark:text-gray-400">{{ entry.detail }}</span>
+          <div v-if="topChampions.length" class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="text-base font-semibold text-gray-800 dark:text-gray-100">Top Champions</div>
+                <div class="h-px flex-1 ml-4 bg-gray-200 dark:bg-gray-700"></div>
+              </div>
+              <ul class="space-y-3">
+                <li
+                  v-for="champ in topChampions"
+                  :key="champ.key"
+                  class="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900/40"
+                >
+                  <img
+                    v-if="champ.image"
+                    :src="champ.image"
+                    :alt="champ.name"
+                    class="h-16 w-16 flex-shrink-0 rounded-lg object-cover"
+                    @error="onChampionImgError"
+                  />
+                  <div class="flex flex-1 flex-col gap-1">
+                    <div class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ champ.name }}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">{{ champ.winrateText }} • {{ champ.games }} games</div>
+                  </div>
                 </li>
               </ul>
             </div>
+
+            <div v-if="additionalSections.length" class="grid gap-6">
+              <div v-for="section in additionalSections" :key="section.title" class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <div class="text-base font-semibold text-gray-800 dark:text-gray-100">{{ section.title }}</div>
+                  <div class="h-px flex-1 ml-4 bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+                <ul class="space-y-3">
+                  <li
+                    v-for="entry in section.entries"
+                    :key="section.title + ':' + entry.label"
+                    class="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900/40"
+                  >
+                    <img
+                      v-if="entry.championImage"
+                      :src="entry.championImage"
+                      :alt="entry.label"
+                      class="h-16 w-16 flex-shrink-0 rounded-lg object-cover"
+                      @error="onChampionImgError"
+                    />
+                    <div class="flex flex-1 flex-col gap-1">
+                      <div class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ entry.label }}</div>
+                      <div class="text-sm text-gray-600 dark:text-gray-400">{{ entry.detail }}</div>
+                    </div>
+                  </li>
+                </ul>
+            </div>
           </div>
 
-          <details class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300">
+          <!-- <details class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300">
             <summary class="cursor-pointer font-medium text-gray-700 dark:text-gray-200">Raw stats payload</summary>
             <pre class="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs">{{ prettyPlayerStats }}</pre>
-          </details>
+          </details> -->
         </div>
       </div>
 
@@ -105,11 +137,28 @@
             No matches found.
           </div>
           <div v-else class="space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="text-sm text-gray-600 dark:text-gray-400">
+                Page {{ matchesPage + 1 }}
+              </div>
+              <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <span>Matches per page</span>
+                <select
+                  v-model.number="matchesPageSize"
+                  class="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                >
+                  <option v-for="option in matchesPageSizeOptions" :key="option" :value="option">
+                    {{ option }}
+                  </option>
+                </select>
+              </label>
+            </div>
+
             <div v-for="(match, idx) in matches" :key="match?.metadata?.matchId ?? idx"
                  class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
               <div class="flex justify-between items-center mb-2">
                 <div>
-                  <span class="font-semibold">{{ match?.info?.gameMode ?? 'Unknown mode' }}</span>
+                  <span class="font-semibold">{{ match?.info?.gameMode ?? 'Classic' }}</span>
                   <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">
                     {{ formatDuration(match?.info?.gameDuration ?? 0) }}
                   </span>
@@ -136,19 +185,26 @@
             </div>
 
             <!-- Pagination -->
-            <div class="flex justify-center gap-2 mt-4">
-              <button
-                @click="prevPage"
-                :disabled="matchesPage === 0"
-                class="px-4 py-2 rounded bg-blue-500 text-white disabled:bg-gray-300">
-                Previous
-              </button>
-              <button
-                @click="nextPage"
-                :disabled="!hasMoreMatches"
-                class="px-4 py-2 rounded bg-blue-500 text-white disabled:bg-gray-300">
-                Next
-              </button>
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <!-- <div class="text-sm text-gray-600 dark:text-gray-400">
+                Showing {{ matches.length }} of {{ matchesPageSize }} matches on this page
+              </div> -->
+              <div class="flex gap-2">
+                <button
+                  @click="prevPage"
+                  :disabled="matchesPage === 0"
+                  class="px-4 py-2 rounded bg-blue-500 text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-600"
+                >
+                  Previous
+                </button>
+                <button
+                  @click="nextPage"
+                  :disabled="!hasMoreMatches"
+                  class="px-4 py-2 rounded bg-blue-500 text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-600"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -174,6 +230,8 @@ const error = ref<string | null>(null)
 const player = ref<Player | null>(null)
 const matches = ref<MatchData[]>([])
 const matchesPage = ref(0)
+const matchesPageSize = ref(5)
+const matchesPageSizeOptions = [5, 10, 20]
 const hasMoreMatches = ref(true)
 const playerStats = ref<Record<string, any> | null>(null)
 
@@ -294,30 +352,33 @@ const fetchMatches = async () => {
   loadingMatches.value = true
   try {
     // Use participants-by-puuid endpoint to avoid 404s on players.getMatches
-    const resp = await api.matchData.getByPuuid(puuid, { page: matchesPage.value, size: 10 })
+    const resp = await api.matchData.getByPuuid(puuid, { page: matchesPage.value, size: matchesPageSize.value })
     const { content, totalPages } = pageWrap(resp)
+    const entries = Array.isArray(content) ? content : []
+    const limitedEntries = entries.slice(0, matchesPageSize.value)
+    const hasMoreFallback = entries.length > matchesPageSize.value
 
     // Determine shape: MatchData vs Participant
-    const looksLikeMatch = content.length > 0 && content[0]?.info && content[0]?.metadata
+    const looksLikeMatch = limitedEntries.length > 0 && limitedEntries[0]?.info && limitedEntries[0]?.metadata
 
     let finalMatches: MatchData[] = []
     const statsMap: Record<string, MatchDataParticipant> = {}
 
     if (looksLikeMatch) {
       // Already MatchData[]
-      finalMatches = content as MatchData[]
+      finalMatches = limitedEntries as MatchData[]
       for (const m of finalMatches) {
         const p = m.info.participants.find(p => p.puuid === puuid)
         if (p) statsMap[m.metadata.matchId] = p
       }
     } else {
       // Assume participant entries with matchId and K/D/A etc.
-      for (const entry of content) {
+      for (const entry of limitedEntries) {
         if (entry?.matchId) {
           statsMap[entry.matchId] = entry as MatchDataParticipant
         }
       }
-      finalMatches = await hydrateMatchesFromParticipants(content)
+      finalMatches = await hydrateMatchesFromParticipants(limitedEntries)
     }
 
     matches.value = finalMatches
@@ -326,7 +387,7 @@ const fetchMatches = async () => {
     if (typeof totalPages === 'number' && totalPages > 0) {
       hasMoreMatches.value = matchesPage.value < totalPages - 1
     } else {
-      hasMoreMatches.value = content.length === 10
+      hasMoreMatches.value = hasMoreFallback
     }
   } catch (e) {
     const status = (e as any)?.response?.status
@@ -356,6 +417,10 @@ const nextPage = () => { if (hasMoreMatches.value) matchesPage.value++ }
 
 onMounted(() => { fetchPlayer(); fetchMatches(); fetchPlayerStats() })
 watch(matchesPage, fetchMatches)
+watch(matchesPageSize, () => {
+  matchesPage.value = 0
+  fetchMatches()
+})
 watch(() => route.params.puuid, () => {
   // When navigating to another player, reset and refetch
   matchesPage.value = 0
@@ -382,41 +447,209 @@ const formatWinrate = (value?: number, wins?: number, total?: number) => {
   return '0.0%'
 }
 
+const sanitizeChampionKey = (value?: string | null) => {
+  if (!value) return ''
+  return String(value).replace(/[^A-Za-z0-9]/g, '')
+}
+
+const championImagePath = (value?: string | null) => {
+  const key = sanitizeChampionKey(value)
+  if (!key) return null
+  return `/tiles/${key}_0.jpg`
+}
+
+const deriveChampionImage = (source: any): string | null => {
+  if (!source) return null
+  if (typeof source === 'string') return championImagePath(source)
+  if (typeof source === 'object') {
+    const candidates = [
+      source.tileName,
+      source.championName,
+      source.name,
+      source.champion,
+    ]
+    for (const candidate of candidates) {
+      const path = championImagePath(candidate)
+      if (path) return path
+    }
+  }
+  return null
+}
+
+const onChampionImgError = (event: Event) => {
+  const img = event.target as HTMLImageElement | null
+  if (!img || img.dataset.fallback) return
+  img.dataset.fallback = '1'
+  img.src = '/favicon.ico'
+}
+
+const toNumber = (value: any) => {
+  if (value === null || value === undefined) return null
+  const num = Number(value)
+  return Number.isFinite(num) ? num : null
+}
+
 const totalGames = computed(() => {
-  if (!playerStats.value) return 0
-  const stats: any = playerStats.value
-  return Number(stats.totalGames ?? stats.games ?? stats.count ?? 0)
+  if (!playerStats.value) {
+    const wins = Number(player.value?.wins || 0)
+    const losses = Number(player.value?.losses || 0)
+    return wins + losses
+  }
+  const s: any = playerStats.value
+  const candidates = [
+    s.totalGames,
+    s.games,
+    s.gamesPlayed,
+    s.seasonGames,
+    s.matches,
+    s.totalMatches,
+    s.count,
+  ]
+  for (const candidate of candidates) {
+    const num = toNumber(candidate)
+    if (num !== null) return num
+  }
+  const wins = overviewWins.value
+  const losses = toNumber(s.losses ?? s.totalLosses ?? s.seasonLosses ?? s.gamesLost)
+  if (losses !== null) return wins + losses
+  return wins
 })
+
 const overviewWins = computed(() => {
-  if (!playerStats.value) return player.value?.wins ?? 0
-  const stats: any = playerStats.value
-  return Number(stats.wins ?? stats.totalWins ?? 0)
+  if (!playerStats.value) return Number(player.value?.wins ?? 0)
+  const s: any = playerStats.value
+  const candidates = [
+    s.wins,
+    s.totalWins,
+    s.seasonWins,
+    s.gamesWon,
+    s.victories,
+  ]
+  for (const candidate of candidates) {
+    const num = toNumber(candidate)
+    if (num !== null) return num
+  }
+  return Number(player.value?.wins ?? 0)
 })
+
 const overviewLosses = computed(() => {
-  if (!playerStats.value) return player.value?.losses ?? 0
-  const stats: any = playerStats.value
-  const explicit = stats.losses ?? stats.totalLosses
-  if (explicit != null) return Number(explicit)
+  if (!playerStats.value) return Number(player.value?.losses ?? 0)
+  const s: any = playerStats.value
+  const candidates = [
+    s.losses,
+    s.totalLosses,
+    s.seasonLosses,
+    s.gamesLost,
+    s.defeats,
+  ]
+  for (const candidate of candidates) {
+    const num = toNumber(candidate)
+    if (num !== null) return num
+  }
   const total = totalGames.value
   const wins = overviewWins.value
-  if (total) return Math.max(total - wins, 0)
-  return player.value?.losses ?? 0
+  return Math.max(total - wins, 0)
 })
+
 const overviewWinrate = computed(() => {
   if (!playerStats.value) return winRate.value
-  const stats: any = playerStats.value
-  if (stats.winrate != null) return Number(stats.winrate).toFixed(1)
+  const s: any = playerStats.value
+  const direct = toNumber(s.winrate ?? s.seasonWinrate ?? s.winRate)
+  if (direct !== null) return direct.toFixed(1)
   const wins = overviewWins.value
   const losses = overviewLosses.value
   const total = wins + losses
   return total ? ((wins / total) * 100).toFixed(1) : '0.0'
 })
 
-const topChampions = computed(() => {
-  if (!playerStats.value) return [] as any[]
-  const stats: any = playerStats.value
-  const list = stats.topChampions ?? stats.mostPlayedChampions ?? stats.champions ?? []
-  return Array.isArray(list) ? list.slice(0, 5) : []
+type ChampionListItem = {
+  key: string
+  name: string
+  games: number
+  wins: number
+  losses: number
+  winrateValue: number | null
+  winrateText: string
+  image: string | null
+}
+
+type SectionEntry = {
+  label: string
+  detail: string
+  championImage: string | null
+}
+
+type AdditionalSection = {
+  title: string
+  entries: SectionEntry[]
+}
+
+const arrayFrom = (value: any): any[] => {
+  if (!value) return []
+  if (Array.isArray(value)) return value
+  if (typeof value === 'object') {
+    for (const key of ['content', 'entries', 'rows', 'list', 'items', 'data', 'values']) {
+      const nested = (value as Record<string, any>)[key]
+      if (Array.isArray(nested)) return nested
+    }
+    return Object.values(value)
+  }
+  return []
+}
+
+const normalizeChampion = (entry: any): Omit<ChampionListItem, 'winrateText'> | null => {
+  if (!entry || typeof entry !== 'object') return null
+  const base = entry.champion || entry
+  const name = base.championName ?? base.name ?? entry.championName ?? entry.name ?? entry.champion ?? ''
+  const idCandidate = entry.championId ?? base?.championId ?? base?.id ?? entry.id ?? entry.key
+  const keyBase = idCandidate ?? (name || null)
+  const key = String(keyBase ?? JSON.stringify(entry))
+  const games = toNumber(entry.games ?? entry.count ?? entry.matches ?? entry.played) ?? 0
+  const wins = toNumber(entry.wins ?? entry.totalWins ?? entry.victories) ?? 0
+  const losses = toNumber(entry.losses ?? entry.totalLosses ?? entry.defeats) ?? (games ? Math.max(games - wins, 0) : 0)
+  const winrateValue = toNumber(entry.winrate ?? entry.winRate ?? entry.win_percentage ?? entry.avgWinrate)
+  const image = deriveChampionImage(entry) ?? deriveChampionImage(base) ?? deriveChampionImage(name)
+  return {
+    key,
+    name: name || (idCandidate != null ? `Champion ${idCandidate}` : 'Unknown champion'),
+    games,
+    wins,
+    losses,
+    winrateValue: winrateValue ?? (games ? (wins / games) * 100 : null),
+    image,
+  }
+}
+
+const topChampions = computed<ChampionListItem[]>(() => {
+  if (!playerStats.value) return []
+  const stats: Record<string, any> = playerStats.value
+  const sources = [
+    stats.topChampions,
+    stats.mostPlayedChampions,
+    stats.champions,
+    stats.favoriteChampions,
+    stats.mostPlayed,
+    stats.championStats,
+    stats.championsByWinrate,
+  ]
+
+  for (const source of sources) {
+    const entries = arrayFrom(source)
+    if (!entries.length) continue
+    const normalized = entries
+      .map(normalizeChampion)
+      .filter((item): item is Omit<ChampionListItem, 'winrateText'> => Boolean(item))
+      .filter(item => item.games > 0 || item.wins > 0)
+    if (!normalized.length) continue
+
+    return normalized.slice(0, 5).map(item => ({
+      ...item,
+      image: item.image ?? championImagePath(item.name) ?? null,
+      winrateText: formatWinrate(item.winrateValue ?? undefined, item.wins, item.games),
+    }))
+  }
+
+  return []
 })
 
 const averagesDisplay = computed(() => {
@@ -434,19 +667,43 @@ const averagesDisplay = computed(() => {
   return rows
 })
 
-const additionalSections = computed(() => {
-  if (!playerStats.value) return [] as { title: string; entries: { label: string; detail: string }[] }[]
+const additionalSections = computed<AdditionalSection[]>(() => {
+  if (!playerStats.value) return []
   const stats: any = playerStats.value
-  const sections: { title: string; entries: { label: string; detail: string }[] }[] = []
+  const sections: AdditionalSection[] = []
 
   const topRoles = stats.topRoles ?? stats.roles ?? []
   if (Array.isArray(topRoles) && topRoles.length) {
     sections.push({
       title: 'Top Roles',
-      entries: topRoles.slice(0, 5).map((r: any) => ({
-        label: r.role || r.position || r.name,
-        detail: `${formatWinrate(r.winrate, r.wins, r.games ?? r.count)} • ${r.games ?? r.count ?? 0} games`
-      }))
+      entries: topRoles.slice(0, 5).map((r: any) => {
+        const games = r.games ?? r.count ?? 0
+        const baseDetail = `${formatWinrate(r.winrate, r.wins, games)} • ${games} games`
+        const favorite = r.favoriteChampion ?? r.topChampion ?? r.bestChampion
+        let detail = baseDetail
+        const championImage = deriveChampionImage(favorite)
+        if (favorite) {
+          const isObj = typeof favorite === 'object'
+          const favName = isObj
+            ? favorite.name ?? favorite.championName ?? favorite.champion ?? 'Unknown champion'
+            : String(favorite)
+          if (favName) {
+            if (isObj) {
+              const favGames = favorite.games ?? favorite.count ?? favorite.matches ?? null
+              const favWinrate = formatWinrate(favorite.winrate, favorite.wins, favGames ?? undefined)
+              const gamesPortion = favGames != null ? ` • ${favGames} games` : ''
+              detail += ` • Fav: ${favName} (${favWinrate}${gamesPortion})`
+            } else {
+              detail += ` • Fav: ${favName}`
+            }
+          }
+        }
+        return {
+          label: r.role || r.position || r.name,
+          detail,
+          championImage,
+        }
+      })
     })
   }
 
@@ -456,7 +713,8 @@ const additionalSections = computed(() => {
       title: 'Top Queues',
       entries: topQueues.slice(0, 5).map((q: any) => ({
         label: q.name || q.queue || q.queueId,
-        detail: `${formatWinrate(q.winrate, q.wins, q.games ?? q.count)} • ${q.games ?? q.count ?? 0} games`
+        detail: `${formatWinrate(q.winrate, q.wins, q.games ?? q.count)} • ${q.games ?? q.count ?? 0} games`,
+        championImage: null,
       }))
     })
   }
@@ -467,7 +725,8 @@ const additionalSections = computed(() => {
       title: 'Core Items',
       entries: topItems.slice(0, 6).map((i: any) => ({
         label: i.itemName || i.name || `Item ${i.itemId ?? i.id}`,
-        detail: `${formatWinrate(i.winrate, i.wins, i.games ?? i.count)} • ${i.games ?? i.count ?? 0} games`
+        detail: `${formatWinrate(i.winrate, i.wins, i.games ?? i.count)} • ${i.games ?? i.count ?? 0} games`,
+        championImage: null,
       }))
     })
   }
@@ -478,7 +737,8 @@ const additionalSections = computed(() => {
       title: 'Common Allies',
       entries: allies.slice(0, 6).map((a: any) => ({
         label: a.name || a.summonerName || (a.puuid ? `${a.puuid.slice(0, 8)}…` : 'Unknown'),
-        detail: `${formatWinrate(a.winrate, a.wins, a.games ?? a.count)} • ${a.games ?? a.count ?? 0} games`
+        detail: `${formatWinrate(a.winrate, a.wins, a.games ?? a.count)} • ${a.games ?? a.count ?? 0} games`,
+        championImage: null,
       }))
     })
   }
@@ -489,7 +749,8 @@ const additionalSections = computed(() => {
       title: 'Common Opponents',
       entries: opponents.slice(0, 6).map((o: any) => ({
         label: o.name || o.summonerName || (o.puuid ? `${o.puuid.slice(0, 8)}…` : 'Unknown'),
-        detail: `${formatWinrate(o.winrate, o.wins, o.games ?? o.count)} • ${o.games ?? o.count ?? 0} games`
+        detail: `${formatWinrate(o.winrate, o.wins, o.games ?? o.count)} • ${o.games ?? o.count ?? 0} games`,
+        championImage: null,
       }))
     })
   }

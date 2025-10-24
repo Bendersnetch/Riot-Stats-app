@@ -25,6 +25,27 @@ export interface MatchData {
   info: MatchDataInfo;
 }
 
+export interface ChampionStats {
+  championName: string;
+  championId: number;
+  totalGames: number;
+  wins: number;
+  losses: number;
+  winrate: number;
+  averageKills?: number;
+  averageDeaths?: number;
+  averageAssists?: number;
+  kda?: number;
+  damagePerMinute?: number;
+  csPerMinute?: number;
+  goldPerMinute?: number;
+  roles?: Array<{ role: string; games: number; winrate?: number }>;
+  items?: Array<{ itemId: number; itemName?: string; games: number; wins?: number; winrate?: number }>;
+  runes?: Array<{ primary: string; secondary?: string; games: number; wins?: number; winrate?: number }>;
+  teammates?: Array<{ puuid?: string; summonerName?: string; games: number; wins?: number; winrate?: number }>;
+  opponents?: Array<{ puuid?: string; summonerName?: string; games: number; wins?: number; winrate?: number }>;
+}
+
 export interface MatchDataMetadata {
   dataVersion: string;
   matchId: string;

@@ -16,7 +16,7 @@
 
     <div class="container mx-auto px-4 pb-8">
       <!-- Statistics Summary Row -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div v-for="(stat, index) in summaryStats" :key="index"
              class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 flex items-center border-l-4 transition-colors"
              :class="stat.colorClass">
@@ -30,7 +30,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Match Duration Stats Card -->
         <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors">
           <div class="flex justify-between items-center mb-4">
@@ -42,16 +42,6 @@
             </button>
           </div>
           <MatchDuration :duration-stats="durationStats" :is-loading="isLoadingDuration" />
-        </div>
-
-        <!-- Rank Distribution Card -->
-        <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold card-title">Rank Distribution</h2>
-          </div>
-          <div class="h-64">
-            <RankDistribution />
-          </div>
         </div>
 
         <!-- Top Champions Card -->
@@ -74,18 +64,6 @@
 <!--          <ChampionWinrates :winrates="championWinrates" :is-loading="isLoadingWinrates" />-->
         </div>
 
-        <!-- Recent Matches -->
-        <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-semibold card-title">Recent Matches</h2>
-            <button @click="refreshRecentMatches" class="text-blue-600 hover:text-blue-800" aria-label="Refresh recent matches">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-          </div>
-          <RecentMatches :matches="recentMatches" :is-loading="isLoadingMatches" />
-        </div>
       </div>
     </div>
   </div>
@@ -106,7 +84,6 @@ const summaryStats = ref([
   { title: 'Total Matches', value: '—', icon: 'svg-icon', colorClass: 'border-blue-500', bgClass: 'bg-blue-100', iconColor: 'text-blue-600' },
   { title: 'Players Tracked', value: '—', icon: 'svg-icon', colorClass: 'border-purple-500', bgClass: 'bg-purple-100', iconColor: 'text-purple-600' },
   { title: 'Avg. Match Duration', value: '—', icon: 'svg-icon', colorClass: 'border-green-500', bgClass: 'bg-green-100', iconColor: 'text-green-600' },
-  { title: 'Top Tier', value: '—', icon: 'svg-icon', colorClass: 'border-yellow-500', bgClass: 'bg-yellow-100', iconColor: 'text-yellow-600' }
 ])
 
 // Match duration state
