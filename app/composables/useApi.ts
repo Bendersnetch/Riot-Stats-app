@@ -9,12 +9,7 @@ export const useApi = () => {
     health: () => request.get('/health'),
     list: (params?: { tier?: string; rank?: string; page?: number; size?: number; sort?: string }) => 
       request.get('/match-ids', { params }),
-    create: (data: any) => request.post('/match-ids', data),
-    bulkUpsert: (data: any[]) => request.post('/match-ids/bulk', data),
     getById: (matchId: string) => request.get(`/match-ids/${matchId}`),
-    update: (matchId: string, data: any) => request.put(`/match-ids/${matchId}`, data),
-    patch: (matchId: string, data: any) => request.patch(`/match-ids/${matchId}`, data),
-    delete: (matchId: string) => request.delete(`/match-ids/${matchId}`),
     stats: {
       count: (params?: { tier?: string; rank?: string }) => request.get('/match-ids/stats/count', { params }),
       distinctTiers: () => request.get('/match-ids/stats/distinct-tiers'),
@@ -36,12 +31,7 @@ export const useApi = () => {
       size?: number;
       sort?: string;
     }) => request.get('/players', { params }),
-    create: (data: any) => request.post('/players', data),
-    bulkUpsert: (data: any[]) => request.post('/players/bulk', data),
     getByPuuid: (puuid: string) => request.get(`/players/${puuid}`),
-    update: (puuid: string, data: any) => request.put(`/players/${puuid}`, data),
-    patch: (puuid: string, data: any) => request.patch(`/players/${puuid}`, data),
-    delete: (puuid: string) => request.delete(`/players/${puuid}`),
     stats: {
       count: (params?: { tier?: string; rank?: string; minLp?: number; maxLp?: number }) =>
         request.get('/players/stats/count', { params }),
@@ -69,10 +59,7 @@ export const useApi = () => {
       size?: number;
       sort?: string;
     }) => request.get('/match-data', { params }),
-    create: (data: any) => request.post('/match-data', data),
-    bulkUpsert: (data: any[]) => request.post('/match-data/bulk', data),
     getById: (matchId: string) => request.get(`/match-data/${matchId}`),
-    delete: (matchId: string) => request.delete(`/match-data/${matchId}`),
     getPlayers: (matchId: string) => request.get(`/match-data/${matchId}/players`),
     getByPuuid: (puuid: string, params?: { page?: number; size?: number }) =>
       request.get(`/match-data/participants/by-puuid/${puuid}`, { params }),

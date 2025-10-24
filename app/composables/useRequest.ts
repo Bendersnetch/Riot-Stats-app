@@ -15,31 +15,7 @@ export function useRequest() {
     return response.data
   }
 
-  const post = async (url: string, data?: any, config?: AxiosRequestConfig) => {
-    const response = await instance.post(url, data, config)
-    return response.data
-  }
-
-  const put = async (url: string, data?: any, config?: AxiosRequestConfig) => {
-    const response = await instance.put(url, data, config)
-    return response.data
-  }
-
-  const patch = async (url: string, data?: any, config?: AxiosRequestConfig) => {
-    const response = await instance.patch(url, data, config)
-    return response.data
-  }
-
-  const del = async (url: string, config?: AxiosRequestConfig) => {
-    const response = await instance.delete(url, config)
-    return response.data
-  }
-
   return {
-    get,
-    post,
-    put,
-    patch,
-    delete: del
+    get
   }
 }
